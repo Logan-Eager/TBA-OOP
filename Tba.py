@@ -149,14 +149,19 @@ class Player:
 
     # attack function, randomly wins or loses battle and apply damage to losing side
     def attack(self, enemy):
-        if random.randint(0, 2) == 1:
-            self.player_take_damage(enemy)
+        if self.player_location.level_enemies != None:
+            if random.randint(0, 5) == 1:
+                self.player_take_damage(enemy)
 
+            else:
+                if(enemy.enemy_take_damage(the_player)) == "Death":
+                    print("NIGGA OWWWW IM DEADDDD I DONT WANNA DIEEEE")
+                    self.player_location.level_enemies = None
         else:
-            enemy.enemy_take_damage(the_player)
+            print("?")
 
     def player_take_damage(self, enemy):
-        player_damage_messages = ["shin", "head", "forearm"]
+        player_damage_messages = ["shin", "eye", "brain", "scrotum"]
         self.player_health = self.player_health - enemy.enemy_damage
         print("The %s" % enemy.enemy_name, "charges forward and your %s is injured"
               % random.choice(player_damage_messages))
@@ -183,16 +188,17 @@ class Enemy:
 
     def randomise_spawn(self, enemy_locations):
         random_spawn = random.choice(enemy_locations)
-        Level.level_enemies = random_spawn
         self.enemy_spawn = random_spawn
 
     def print_enemy(self):
         print("a %s." % self.enemy_name)
 
     def enemy_take_damage(self, player):
-        enemy_damage_messages = ["face", "abdomen", "leg"]
+        enemy_damage_messages = ["face", "abdomen", "knee"]
         self.enemy_health = self.enemy_health - player.player_damage
         print("You swing your sword and hit the %s in the" % self.enemy_name, random.choice(enemy_damage_messages))
+        if self.enemy_health <= 0:
+            return "Death"
 
 
 # defines commands in list

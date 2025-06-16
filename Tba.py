@@ -1,15 +1,15 @@
 # TEXT BASED ADVENTURE. OOP. PYTHON PROGRAM #
 #
 # MAP OF GAME
-#                #   #   #  #   #    #  #
-#                #   moldy skeleton     #
+#              #   #   #  #   #    #  #
+#              #   moldy skeleton     #
 #   #   #   #   #   #   #   ~   #   #   #    #  #
 #   dense shrubs  /  cross roads  /   old tree  #
-#   #   #   #   /   #   #   #   #   #   #   #   #
-#    deep forest    #
-#   #   /   #   #   #
-#     start     #
-#   #   #   #   #
+#   #   #   #   #   #   /   #   #   #   #   #   #
+                #    deep forest    #
+                #  #   #   /   #  # #   
+                  #     start      #
+                  #   #   #    #   #
 
 # MODULE IMPORT
 import random
@@ -20,12 +20,12 @@ import random
 # defines level class
 class Level:
     def __init__(self):
-        # defining variables to avoid pep-8 violations
+        # defining variables
         self.level_name = None
         self.level_description = None
         self.level_gates = None
         self.level_items = None
-        self.level_enemies = None
+        self.level_enemies = []
 
     #  defines level setup function, defines instances of level class
     def setup(self, level_name, level_gates, level_description, level_items, level_enemies):
@@ -55,11 +55,11 @@ class Level:
             print("There is", end=" ")
             self.level_enemies.print_enemy()
 
-    # removes item from level for use in take function
+    # removes item from level (for use in take function)
     def remove_item(self, item):
         self.level_items.remove(item)
 
-    # adds item to level for use in drop function
+    # adds item to level (for use in drop function)
     def add_item(self, item):
         self.level_items.append(item)
 
@@ -67,6 +67,8 @@ class Level:
     def remove_enemy(self):
         self.level_enemies = None
 
+    def add_enemy(self, level):
+        self.level_enemies.append(level)
 
 # defines gate class
 class Gate:
@@ -155,7 +157,7 @@ class Player:
 
             else:
                 if(enemy.enemy_take_damage(the_player)) == "Death":
-                    print("NIGGA OWWWW IM DEADDDD I DONT WANNA DIEEEE")
+                    print(enemy.enemy_name + " has died")
                     self.player_location.level_enemies = None
         else:
             print("?")
@@ -189,19 +191,21 @@ class Enemy:
     def randomise_spawn(self, enemy_locations):
         random_spawn = random.choice(enemy_locations)
         self.enemy_spawn = random_spawn
+        random_spawn.add_enemy(random_spawn)
 
     def print_enemy(self):
         print("a %s." % self.enemy_name)
 
     def enemy_take_damage(self, player):
-        enemy_damage_messages = ["face", "abdomen", "knee"]
+        enemy_damage_messages = ["face", "abdomen", "knee", "butt crack"]
         self.enemy_health = self.enemy_health - player.player_damage
         print("You swing your sword and hit the %s in the" % self.enemy_name, random.choice(enemy_damage_messages))
+        print("You did " + player.damage + " the enemy has " + self.enemy_health + " health left")
         if self.enemy_health <= 0:
             return "Death"
 
 
-# defines commands in list
+# defines commands in list for player viewing
 commands = "go 'direction', look, take 'item', 'inventory', drop 'item' and unlock"
 
 # initialises levels
@@ -314,7 +318,7 @@ def sword_sequence():
 # asks name and stores in player instance
 print("What is your name.")
 user_input = input(">")
-the_player = Player(user_input, moldy_skeleton_area)
+the_player = Player(user_input, start_area)
 
 # gives player information and area setting
 print("\n(Cry help for commands)")

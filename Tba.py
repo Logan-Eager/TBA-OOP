@@ -13,7 +13,7 @@
 
 # MODULE IMPORT
 import random
-
+import os
 # START OF CLASSES AND INITIALISING
 
 
@@ -155,8 +155,14 @@ class Player:
 
             else:
                 if(enemy.enemy_take_damage(the_player)) == "Death":
-                    print(enemy.enemy_name + " has died")
+                    clear_terminal()
+                    print("The " + enemy.enemy_name + " has died")
                     self.player_location.level_enemies = None
+                    if enemy.enemy_name == "skeleton":
+                        print("You have obtained victory. Sit with your actions.")
+
+                        while True:
+                            input()
         else:
             print("?")
 
@@ -204,9 +210,14 @@ class Enemy:
         if self.enemy_health <= 0:
             return "Death"
 
+def clear_terminal():
+    if os.name == "nt":
+        os.system('cls' if os.name == 'nt' else 'clear')
+    else:
+        print("\033[2J\033[H", end="")
 
 # defines commands in list for player viewing
-commands = "go 'direction', look, take 'item', 'inventory', drop 'item' and unlock"
+commands = ["go 'compass-direction'", "look", "take 'item'", "inventory", "unlock 'gate-direction'", "attack 'enemy'", "press up-arrowkey to repeat last command"]
 
 # initialises levels
 start_area = Level()
@@ -231,7 +242,7 @@ wolf = Enemy("wolf", 50, 15, None)
 gate1 = Gate("north", deep_forest_area, False, "")
 start_area.setup("forest", [gate1], "You are in a dusk lit forest surrounded by trees. "
                                     "The only direction is deeper into the forest.", 
-                                    [player_sword], [])
+                                    [], None)
 
 # the level setup function is given a name variable, a list of gates in the level,
 #  a description string and items list
@@ -242,7 +253,7 @@ gate1 = Gate("south", start_area, False, "")
 gate2 = Gate("north", cross_road_area, False, "")
 deep_forest_area.setup("deep forest", [gate1, gate2],
 "You are in a seemingly endless tunnel of dark oak trees.", [],
-                       [])
+                       None)
 
 # cross road area setup
 gate1 = Gate("south", deep_forest_area, False, "")
@@ -251,20 +262,19 @@ gate3 = Gate("west", dense_shrubs_area, False, "")
 gate4 = Gate("east", old_tree_area, False, "")
 cross_road_area.setup("cross road area", [gate2, gate4, gate1, gate3], "You are at a crossroads. "
 "The path spirals into three directions."
-" It is suddenly dark. ", [], [])
+" It is suddenly dark. ", [], None)
 
 gate1 = Gate("east", cross_road_area, False, "")
 dense_shrubs_area.setup("dense shrubs area", [gate1], "You are in an area with dense shrubbery."
-                                                      "The only direction is back", [], [])
+                                                      " The only direction is back", [], None)
 
 gate1 = Gate("west", cross_road_area, False, "")
 old_tree_area.setup("old tree area", [gate1],
-                    "You see a large old tree. Something is hanging off a branch", [rusted_key], [])
+                    "You see a large old tree. Something is hanging off a branch", [rusted_key], None)
 
 gate1 = Gate("south", cross_road_area, False, "")
 moldy_skeleton_area.setup("moldy skeleton area", [gate1],
-"There is a skeleton covered in mold, the path is too "
- "tight to walk around it", [], skeleton)
+"You reach an ancient burial grounds with a monolithic crypt infront of you", [], skeleton)
 # defines list of spawn areas, used for enemies
 enemy_spawn_areas = [deep_forest_area, cross_road_area, dense_shrubs_area, old_tree_area]
 wolf.randomise_spawn(enemy_spawn_areas)
@@ -280,6 +290,7 @@ def incorrect_answer_loop(answers):
         user_input_for_loop = str.lower(input(">"))
 
         if user_input_for_loop in answers:
+            clear_terminal()
             return user_input_for_loop
 
         else:
@@ -288,7 +299,7 @@ def incorrect_answer_loop(answers):
 
 
 # defines function for players sword creation
-def sword_sequence():
+def sword_sequence(player):
     # print functions will not be commented because they are straight forward
 
     print("You are offered a sword.\n")
@@ -304,6 +315,7 @@ def sword_sequence():
 
     # puts player in loop to collect sword colour
     player_sword.colour = str.lower(input(">"))
+    clear_terminal()
 
     print("Your sword colour is:", player_sword.colour, "\n")
 
@@ -315,18 +327,24 @@ def sword_sequence():
     print("Your swords damage type is:", player_sword.damage_type)
 
     print("Your sword is finished.\n")
+    input("(press enter to continue)")
+    clear_terminal()
+    player.inventory.append(player_sword)
 
 
-# begins sword sequence
-sword_sequence()
+
 
 # asks name and stores in player instance
 print("What is your name.")
 user_input = input(">")
 the_player = Player(user_input, start_area)
+clear_terminal()
+
+# begins sword sequence (off for debugging)
+sword_sequence(the_player)
 
 # gives player information and area setting
-print("\n(Cry help for commands)")
+print("(Cry help for commands)")
 print(the_player.player_location.level_description)
 
 # starts game loop
@@ -335,28 +353,31 @@ while user_input != "exit":
     while the_player.player_health > 0:
         # asks user for input and stores as lower case
         user_input = str.lower(input(">"))
+        clear_terminal()
 
         # looks for direction in input and if the direction is valid, moves player in that direction
         for d in the_player.player_location.level_gates:
             if d.is_gate(user_input):
                 if d.locked:
+                    if "unlock" in user_input:
+                        break
                     print("The gate rattles and doesnt budge.")
+
+                elif the_player.player_location.level_enemies is not None:
+                    print("Your pride wont let you.")
 
                 else:
                     the_player.move(d.gate_to)
                     print(the_player.player_location.level_description)
-
-        # checks for dead enemy and removes from level is health is below or equal to zero
-        if the_player.player_location.level_enemies == 1:
-            if the_player.player_location.level_enemies.enemy_health <= 0:
-                print("the %s perishes" % the_player.player_location.level_enemies.enemy_name)
-                the_player.player_location.remove_enemy()
-            else:
-                break
+                    if the_player.player_location.level_enemies is not None:
+                        print("Lingering in the darkness is a " + the_player.player_location.level_enemies.enemy_name)
 
         # tells player the commands when asked
-        elif "help" in user_input:
-            print("the commands are:", commands)
+        if "help" in user_input:
+            print("the commands are:")
+            for command in commands:
+                print("--> " + command)
+
 
         # gives player location information
         elif "look" in user_input:
@@ -370,10 +391,6 @@ while user_input != "exit":
         elif "inventory" in user_input:
             the_player.print_inventory()
 
-        # takes items from player and gives to level
-        elif "drop" in user_input:
-            the_player.drop(user_input)
-
         elif "unlock" in user_input:
             for g in the_player.player_location.level_gates:
                 g.unlock(the_player.inventory)
@@ -381,8 +398,6 @@ while user_input != "exit":
         elif "attack" in user_input:
             the_player.attack(the_player.player_location.level_enemies)
 
-        elif "health" in user_input:
-            print(the_player.player_health)
-
     print("\n##GAME OVER##\n  (you suck)")
+    input("press enter to perish.")
     break

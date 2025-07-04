@@ -7,7 +7,7 @@
 #   dense shrubs  /  cross roads  /   old tree  #
 #   #   #   #   #   #   /   #   #   #   #   #   #
                 #    deep forest    #
-                #  #   #   /   #  # #   
+                #  #   #   /   #  # #
                   #     start      #
                   #   #   #    #   #
 
@@ -25,7 +25,7 @@ class Level:
         self.level_description = None
         self.level_gates = None
         self.level_items = None
-        self.level_enemies = []
+        self.level_enemies = None
 
     #  defines level setup function, defines instances of level class
     def setup(self, level_name, level_gates, level_description, level_items, level_enemies):
@@ -68,7 +68,7 @@ class Level:
         self.level_enemies = None
 
     def add_enemy(self, level):
-        self.level_enemies.append(level)
+        self.level_enemies = level
 
 # defines gate class
 class Gate:
@@ -79,9 +79,6 @@ class Gate:
         self.locked = locked  # defines a boolean for if the gate is locked
         self.key = key  # defines a string for what key is needed for lock
 
-    # toggles lock on gate
-    def toggle_lock(self):
-        self.locked = not self.locked
 
     # defines unlock function for locked gates
     def unlock(self, gate_list):
@@ -89,7 +86,8 @@ class Gate:
         for i in gate_list:
             if self.key == i.item_name:
                 self.locked = False
-                print("You turn the key and the %s gate is blown open by a gust of wind." % self.gate_direction)
+                print("You turn the key and the %s gate is blown open by a gust of wind."
+                % self.gate_direction)
                 success = True
         if not success and self.locked:
             print("You do not have the key for this door.")
@@ -191,7 +189,7 @@ class Enemy:
     def randomise_spawn(self, enemy_locations):
         random_spawn = random.choice(enemy_locations)
         self.enemy_spawn = random_spawn
-        random_spawn.add_enemy(random_spawn)
+        random_spawn.add_enemy(self)
 
     def print_enemy(self):
         print("a %s." % self.enemy_name)
@@ -199,8 +197,10 @@ class Enemy:
     def enemy_take_damage(self, player):
         enemy_damage_messages = ["face", "abdomen", "knee", "butt crack"]
         self.enemy_health = self.enemy_health - player.player_damage
-        print("You swing your sword and hit the %s in the" % self.enemy_name, random.choice(enemy_damage_messages))
-        print("You did " + player.damage + " the enemy has " + self.enemy_health + " health left")
+        print("You swing your sword and hit the %s in the" % self.enemy_name, 
+        random.choice(enemy_damage_messages))
+        print(f"You did {player.player_damage}. The enemy has {self.enemy_health} health left.")
+
         if self.enemy_health <= 0:
             return "Death"
 
@@ -216,8 +216,7 @@ moldy_skeleton_area = Level()
 dense_shrubs_area = Level()
 old_tree_area = Level()
 
-# defines list of spawn areas, used for enemies
-enemy_spawn_areas = [deep_forest_area, cross_road_area, dense_shrubs_area, old_tree_area]
+
 
 # initialises items
 player_sword = Item("sword")
@@ -226,20 +225,23 @@ rusted_key = Item("rusted key")
 # initialises enemies
 skeleton = Enemy("skeleton", 100, 25, moldy_skeleton_area)
 
-wolf = Enemy("wolf", 50, 15, [])
-wolf.randomise_spawn(enemy_spawn_areas)
+wolf = Enemy("wolf", 50, 15, None)
 
 # start area setup
 gate1 = Gate("north", deep_forest_area, False, "")
 start_area.setup("forest", [gate1], "You are in a dusk lit forest surrounded by trees. "
-                                    "The only direction is deeper into the forest.", [player_sword], [])
+                                    "The only direction is deeper into the forest.", 
+                                    [player_sword], [])
 
-# the level setup function is given a name variable, a list of gates in the level, a description string and items list
-# gates are given four variables, direction, where the gate goes to, if the gate is locked and what the gates key is
+# the level setup function is given a name variable, a list of gates in the level,
+#  a description string and items list
+# gates are given four variables, direction, where the gate goes to, if the
+# gate is locked and what the gates key is
 # deep forest area setup
 gate1 = Gate("south", start_area, False, "")
 gate2 = Gate("north", cross_road_area, False, "")
-deep_forest_area.setup("deep forest", [gate1, gate2], "You are in a seemingly endless tunnel of dark oak trees.", [],
+deep_forest_area.setup("deep forest", [gate1, gate2],
+"You are in a seemingly endless tunnel of dark oak trees.", [],
                        [])
 
 # cross road area setup
@@ -248,8 +250,8 @@ gate2 = Gate("north", moldy_skeleton_area, True, "rusted key")
 gate3 = Gate("west", dense_shrubs_area, False, "")
 gate4 = Gate("east", old_tree_area, False, "")
 cross_road_area.setup("cross road area", [gate2, gate4, gate1, gate3], "You are at a crossroads. "
-                                                                       "The path spirals into three directions."
-                                                                       " It is suddenly dark. ", [], [])
+"The path spirals into three directions."
+" It is suddenly dark. ", [], [])
 
 gate1 = Gate("east", cross_road_area, False, "")
 dense_shrubs_area.setup("dense shrubs area", [gate1], "You are in an area with dense shrubbery."
@@ -260,9 +262,12 @@ old_tree_area.setup("old tree area", [gate1],
                     "You see a large old tree. Something is hanging off a branch", [rusted_key], [])
 
 gate1 = Gate("south", cross_road_area, False, "")
-moldy_skeleton_area.setup("moldy skeleton area", [gate1], "There is a skeleton covered in mold, the path is too "
-                                                          "tight to walk around it", [], skeleton)
-
+moldy_skeleton_area.setup("moldy skeleton area", [gate1],
+"There is a skeleton covered in mold, the path is too "
+ "tight to walk around it", [], skeleton)
+# defines list of spawn areas, used for enemies
+enemy_spawn_areas = [deep_forest_area, cross_road_area, dense_shrubs_area, old_tree_area]
+wolf.randomise_spawn(enemy_spawn_areas)
 
 # END OF CLASSES AND INITIALISING
 
@@ -313,7 +318,7 @@ def sword_sequence():
 
 
 # begins sword sequence
-# sword_sequence()
+sword_sequence()
 
 # asks name and stores in player instance
 print("What is your name.")
